@@ -3,8 +3,10 @@ package tmdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/magiconair/properties"
+	"github.com/pingcap/go-ycsb/pkg/util"
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
 	tm "github.com/tendermint/tm-db"
 )
@@ -31,14 +33,37 @@ type tmdbCreator struct{}
 
 // Create a new tmdb instance with options
 func (tmdbCreator) Create(p *properties.Properties) (db ycsb.DB, err error) {
-	//	backend := p.GetString(tmdbBackend, "rocksdb")
+	// backend := p.GetString(tmdbBackend, "rocksdb")
+	// TODO: should add another backend type support but current we just
+	// need the simple rocksdb bench
+	name := p.GetString(tmdbName, "benchmark")
+	dir := p.GetString(tmdbDir, "/tmp/benchmark")
+
+	constructViperOptions(p)
+
+	inner := tm.NewDB(name, tm.RocksDBBackend, dir)
+
+	db = &tmdb{
+		p:  p,
+		db: inner,
+		r:  util.NewRowCodec(p),
+	}
 
 	return
+}
+
+// constructViperOptions will construct the inner tmdb viper logic
+// to construct a new rocksdb instance
+func constructViperOptions(p *properties.Properties) {
+	// TODO: should use this create the rocksdb.opts flag and the configuration use the K=V , splitor logic format
 }
 
 type tmdb struct {
 	p  *properties.Properties
 	db tm.DB
+
+	r       *util.RowCodec
+	bufPool *util.BufPool
 }
 
 // ycsb.DB interface implementation
@@ -48,7 +73,7 @@ func (_ *tmdb) ToSqlDB() *sql.DB {
 }
 
 func (db *tmdb) Close() (err error) {
-
+	err = db.db.Close()
 	return
 }
 
@@ -58,33 +83,85 @@ func (db *tmdb) InitThread(ctx context.Context, _ int, _ int) context.Context {
 
 func (db *tmdb) CleanupThread(_ context.Context) {}
 
+func (db *tmdb) getRowKey(table string, key string) []byte {
+	return util.Slice(fmt.Sprintf("%s:%s", table, key))
+}
+
 // Read is the origin database logic
 // we have to adapt this interface for inner tmdb fix query to inner logic not SQL like database
 func (db *tmdb) Read(ctx context.Context, table string, key string, fields []string) (map[string][]byte, error) {
-
-	return map[string][]byte{}, nil
+	value, err := db.db.Get(db.getRowKey(table, key))
+	if err != nil {
+		return nil, err
+	}
+	return db.r.Decode(value, fields)
 }
 
 // Scan also need to adapt for tmdb
 func (db *tmdb) Scan(ctx context.Context, table string, startKey string, count int, fields []string) ([]map[string][]byte, error) {
-	// tmdb.Iterator() -> Iterator
-	// but there is count , in tmdb is end key so how to fix it ?
-	return []map[string][]byte{}, nil
+	res := make([]map[string][]byte, count)
+	it, err := db.db.Iterator(db.getRowKey(table, startKey), nil)
+	if err != nil {
+		return nil, err
+	}
+	i := 0
+	for ; it.Valid() && i < count; it.Next() {
+		value := it.Value()
+		m, err := db.r.Decode(value, fields)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = m
+		i++
+	}
+
+	if err := it.Error(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (db *tmdb) Update(ctx context.Context, table string, key string, values map[string][]byte) error {
+	m, err := db.Read(ctx, table, key, nil)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	for field, value := range values {
+		m[field] = value
+	}
+
+	buf := db.bufPool.Get()
+	defer db.bufPool.Put(buf)
+
+	rowData, err := db.r.Encode(buf.Bytes(), m)
+	if err != nil {
+		return err
+	}
+
+	rowKey := db.getRowKey(table, key)
+
+	return db.db.Set(rowKey, rowData)
 }
 
 func (db *tmdb) Insert(ctx context.Context, table string, key string, values map[string][]byte) error {
+	rowKey := db.getRowKey(table, key)
 
-	return nil
+	buf := db.bufPool.Get()
+	defer db.bufPool.Put(buf)
+
+	rowData, err := db.r.Encode(buf.Bytes(), values)
+	if err != nil {
+		return err
+	}
+
+	return db.db.Set(rowKey, rowData)
 }
 
 func (db *tmdb) Delete(ctx context.Context, table string, key string) error {
-
-	return nil
+	rowKey := db.getRowKey(table, key)
+	return db.db.Delete(rowKey)
 }
 
 // ycsb.BatchDB interface implementations
