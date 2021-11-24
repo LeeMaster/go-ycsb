@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build rocksdb
 // +build rocksdb
 
 package rocksdb
@@ -25,7 +26,7 @@ import (
 	"github.com/pingcap/go-ycsb/pkg/prop"
 	"github.com/pingcap/go-ycsb/pkg/util"
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
-	"github.com/tecbot/gorocksdb"
+	gorocksdb "github.com/tecbot/gorocksdb"
 )
 
 //  properties
@@ -141,8 +142,8 @@ func getOptions(p *properties.Properties) *gorocksdb.Options {
 	opts.SetAllowConcurrentMemtableWrites(p.GetBool(rocksdbAllowConcurrentMemtableWrites, true))
 	opts.SetAllowMmapReads(p.GetBool(rocsdbAllowMmapReads, false))
 	opts.SetAllowMmapWrites(p.GetBool(rocksdbAllowMmapWrites, false))
-	opts.SetArenaBlockSize(p.GetInt(rocksdbArenaBlockSize, 0))
-	opts.SetDbWriteBufferSize(p.GetInt(rocksdbDBWriteBufferSize, 0))
+	opts.SetArenaBlockSize(uint64(p.GetInt64(rocksdbArenaBlockSize, 0)))
+	opts.SetDbWriteBufferSize(uint64(p.GetInt(rocksdbDBWriteBufferSize, 0)))
 	opts.SetHardPendingCompactionBytesLimit(p.GetUint64(rocksdbHardPendingCompactionBytesLimit, 256<<30))
 	opts.SetLevel0FileNumCompactionTrigger(p.GetInt(rocksdbLevel0FileNumCompactionTrigger, 4))
 	opts.SetLevel0SlowdownWritesTrigger(p.GetInt(rocksdbLevel0SlowdownWritesTrigger, 20))
@@ -150,11 +151,11 @@ func getOptions(p *properties.Properties) *gorocksdb.Options {
 	opts.SetMaxBytesForLevelBase(p.GetUint64(rocksdbMaxBytesForLevelBase, 256<<20))
 	opts.SetMaxBytesForLevelMultiplier(p.GetFloat64(rocksdbMaxBytesForLevelMultiplier, 10))
 	opts.SetMaxTotalWalSize(p.GetUint64(rocksdbMaxTotalWalSize, 0))
-	opts.SetMemtableHugePageSize(p.GetInt(rocksdbMemtableHugePageSize, 0))
+	opts.SetMemtableHugePageSize(uint64(p.GetInt(rocksdbMemtableHugePageSize, 0)))
 	opts.SetNumLevels(p.GetInt(rocksdbNumLevels, 7))
 	opts.SetUseDirectReads(p.GetBool(rocksdbUseDirectReads, false))
 	opts.SetUseFsync(p.GetBool(rocksdbUseFsync, false))
-	opts.SetWriteBufferSize(p.GetInt(rocksdbWriteBufferSize, 64<<20))
+	opts.SetWriteBufferSize(uint64(p.GetInt(rocksdbWriteBufferSize, 64<<20)))
 	opts.SetMaxWriteBufferNumber(p.GetInt(rocksdbMaxWriteBufferNumber, 2))
 	opts.SetWalDir(p.GetString(rocksdbWALDir, ""))
 

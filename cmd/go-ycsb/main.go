@@ -40,33 +40,35 @@ import (
 	// Register basic database
 	_ "github.com/pingcap/go-ycsb/db/basic"
 	// Register MySQL database
-	_ "github.com/pingcap/go-ycsb/db/mysql"
+	//	_ "github.com/pingcap/go-ycsb/db/mysql"
 	// Register TiKV database
-	_ "github.com/pingcap/go-ycsb/db/tikv"
+	//	_ "github.com/pingcap/go-ycsb/db/tikv"
 	// Register PostgreSQL database
-	_ "github.com/pingcap/go-ycsb/db/pg"
+	//	_ "github.com/pingcap/go-ycsb/db/pg"
 	// Register Aerospike database
-	_ "github.com/pingcap/go-ycsb/db/aerospike"
+	//	_ "github.com/pingcap/go-ycsb/db/aerospike"
 	// Register Badger database
-	_ "github.com/pingcap/go-ycsb/db/badger"
+	//	_ "github.com/pingcap/go-ycsb/db/badger"
 	// Register RocksDB database
-	_ "github.com/pingcap/go-ycsb/db/rocksdb"
+	//	_ "github.com/pingcap/go-ycsb/db/rocksdb"
 	// Register Spanner database
-	_ "github.com/pingcap/go-ycsb/db/spanner"
+	//	_ "github.com/pingcap/go-ycsb/db/spanner"
 	// Register pegasus database
-	_ "github.com/pingcap/go-ycsb/db/pegasus"
+	//	_ "github.com/pingcap/go-ycsb/db/pegasus"
 	// Register sqlite database
-	_ "github.com/pingcap/go-ycsb/db/sqlite"
+	//	_ "github.com/pingcap/go-ycsb/db/sqlite"
 	// Register cassandra database
-	_ "github.com/pingcap/go-ycsb/db/cassandra"
+	//	_ "github.com/pingcap/go-ycsb/db/cassandra"
 	// Register mongodb database
-	_ "github.com/pingcap/go-ycsb/db/mongodb"
+	//	_ "github.com/pingcap/go-ycsb/db/mongodb"
 	// Register redis database
-	_ "github.com/pingcap/go-ycsb/db/redis"
+	//	_ "github.com/pingcap/go-ycsb/db/redis"
 	// Register boltdb database
-	_ "github.com/pingcap/go-ycsb/db/boltdb"
+	//	_ "github.com/pingcap/go-ycsb/db/boltdb"
 	// Register minio
-	_ "github.com/pingcap/go-ycsb/db/minio"
+	//	_ "github.com/pingcap/go-ycsb/db/minio"
+	// Register tmdb
+	_ "github.com/pingcap/go-ycsb/db/tmdb"
 )
 
 var (
