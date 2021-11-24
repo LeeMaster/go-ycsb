@@ -44,9 +44,10 @@ func (tmdbCreator) Create(p *properties.Properties) (db ycsb.DB, err error) {
 	inner := tm.NewDB(name, tm.RocksDBBackend, dir)
 
 	db = &tmdb{
-		p:  p,
-		db: inner,
-		r:  util.NewRowCodec(p),
+		p:       p,
+		db:      inner,
+		r:       util.NewRowCodec(p),
+		bufPool: util.NewBufPool(),
 	}
 
 	return
